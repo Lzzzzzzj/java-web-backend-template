@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test Console</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .header p {
+            opacity: 0.9;
+        }
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .sidebar h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .api-group {
+            margin-bottom: 20px;
+        }
+        .api-group-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .api-item {
+            padding: 10px 15px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        .api-item:hover {
+            background: #667eea;
+            color: white;
+        }
+        .api-item.active {
+            background: #667eea;
+            color: white;
+        }
+        .api-item .method {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        .method-get { background: #61affe; color: white; }
+        .method-post { background: #49cc90; color: white; }
+        .method-put { background: #fca130; color: white; }
+        .method-delete { background: #f93e3e; color: white; }
+        .content-area {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .auth-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            color: white;
+        }
+        .auth-section h3 {
+            margin-bottom: 15px;
+        }
+        .auth-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .auth-form input {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 150px;
+        }
+        .auth-form button {
+            padding: 12px 25px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        .auth-form button:hover {
+            transform: scale(1.05);
+        }
+        .token-display {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            word-break: break-all;
+            font-size: 13px;
+        }
+        .api-test-section {
+            display: none;
+        }
+        .api-test-section.active {
+            display: block;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-group textarea {
+            min-height: 120px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e1e5eb;
+        }
+        .btn-secondary:hover {
+            background: #e1e5eb;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .response-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: #1e1e1e;
+            border-radius: 12px;
+        }
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .response-title {
+            color: #fff;
+            font-weight: 600;
+        }
+        .response-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .response-body {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .response-body pre {
+            color: #abb2bf;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .file-upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .file-upload-area:hover {
+            background: #f8f9ff;
+        }
+        .file-upload-area.dragover {
+            background: #f0f3ff;
+            border-color: #764ba2;
+        }
+        .file-upload-area input {
+            display: none;
+        }
+        .file-upload-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .file-item .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .file-item .file-remove {
+            color: #f93e3e;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        .toast-success { background: #28a745; }
+        .toast-error { background: #dc3545; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>API Test Console</h1>
+            <p>Spring Boot Template Project - API Testing Tool</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <h3>API List</h3>
+                
+                <div class="api-group">
+                    <div class="api-group-title">Auth API</div>
+                    <div class="api-item" onclick="showSection('login')">
+                        <span class="method method-post">POST</span>Login
+                    </div>
+                    <div class="api-item" onclick="showSection('refresh')">
+                        <span class="method method-post">POST</span>Refresh Token
+                    </div>
+                </div>
+                
+                <div class="api-group">
+                    <div class="api-group-title">User API</div>
+                    <div class="api-item" onclick="showSection('userInfo')">
+                        <span class="method method-get">GET</span>User Info
+                    </div>
+                    <div class="api-item" onclick="showSection('userPage')">
+                        <span class="method method-get">GET</span>User Page
+                    </div>
+                    <div class="api-item" onclick="showSection('userAdd')">
+                        <span class="method method-post">POST</span>Add User
+                    </div>
+                    <div class="api-item" onclick="showSection('userUpdate')">
+                        <span class="method method-put">PUT</span>Update User
+                    </div>
+                    <div class="api-item" onclick="showSection('userDelete')">
+                        <span class="method method-delete">DEL</span>Delete User
+                    </div>
+                </div>
+                
+                <div class="api-group">
+                    <div class="api-group-title">File API</div>
+                    <div class="api-item" onclick="showSection('fileUpload')">
+                        <span class="method method-post">POST</span>Upload File
+                    </div>
+                    <div class="api-item" onclick="showSection('filePage')">
+                        <span class="method method-get">GET</span>File Page
+                    </div>
+                    <div class="api-item" onclick="showSection('fileDownload')">
+                        <span class="method method-get">GET</span>Download File
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <div class="auth-section">
+                    <h3>Authentication</h3>
+                    <div class="auth-form">
+                        <input type="text" id="loginUsername" placeholder="Username" value="admin">
+                        <input type="password" id="loginPassword" placeholder="Password" value="123456">
+                        <button onclick="doLogin()">Login</button>
+                    </div>
+                    <div class="token-display" id="tokenDisplay" style="display:none;">
+                        <strong>Token:</strong> <span id="tokenValue"></span>
+                    </div>
+                </div>
+                
+                <div id="login-section" class="api-test-section active">
+                    <h2 class="section-title">Login</h2>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="api-login-username" value="admin">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="api-login-password" value="123456">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testLogin()">Send Request</button>
+                    </div>
+                    <div class="response-section" id="login-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="login-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="login-body"></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="refresh-section" class="api-test-section">
+                    <h2 class="section-title">Refresh Token</h2>
+                    <div class="form-group">
+                        <label>Refresh Token</label>
+                        <input type="text" id="refreshToken" placeholder="Enter refresh token">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testRefresh()">Send Request</button>
+                    </div>
+                    <div class="response-section" id="refresh-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="refresh-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="refresh-body"></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="userInfo-section" class="api-test-section">
+                    <h2 class="section-title">Get Current User Info</h2>
+                    <p style="color:#666;margin-bottom:20px;">GET /api/users/info</p>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testUserInfo()">Send Request</button>
+                    </div>
+                    <div class="response-section" id="userInfo-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="userInfo-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="userInfo-body"></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="userPage-section" class="api-test-section">
+                    <h2 class="section-title">User Page Query</h2>
+                    <p style="color:#666;margin-bottom:20px;">GET /api/users/page</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Current Page</label>
+                            <input type="number" id="pageCurrent" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Page Size</label>
+                            <input type="number" id="pageSize" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label>Keyword</label>
+                            <input type="text" id="pageKeyword" placeholder="Search keyword">
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testUserPage()">Send Request</button>
+                    </div>
+                    <div class="response-section" id="userPage-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="userPage-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="userPage-body"></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="userAdd-section" class="api-test-section">
+                    <h2 class="section-title">Add User</h2>
+                    <p style="color:#666;margin-bottom:20px;">POST /api/users</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="addUsername" placeholder="Username">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="addPassword" placeholder="Password">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nickname</label>
+                            <input type="text" id="addNickname" placeholder="Nickname">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="addEmail" placeholder="Email">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" id="addPhone" placeholder="Phone">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="addStatus">
+                                <option value="1">Active</option>
+                                <option value="0">Disabled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testAddUser()">Send Request</button>
+                    </div>
+                    <div class="response-section" id="userAdd-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="userAdd-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="userAdd-body"></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="userUpdate-section" class="api-test-section">
+                    <h2 class="section-title">Update User</h2>
+                    <p style="color:#666;margin-bottom:20px;">PUT /api/users</p>
+                    <div class="form-group">
+                        <label>User ID</label>
+                        <input type="number" id="updateUserId" placeholder="User ID">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nickname</label>
+                            <input type="text" id="updateNickname" placeholder="Nickname">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="updateEmail" placeholder="Email">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" id="updatePhone" placeholder="Phone">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="updateStatus">
+                                <option value="1">Active</option>
+                                <option value="0">Disabled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testUpdateUser()">Send Request</button>
+                    </div>
+                    <div class="response-section" id="userUpdate-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="userUpdate-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="userUpdate-body"></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="userDelete-section" class="api-test-section">
+                    <h2 class="section-title">Delete User</h2>
+                    <p style="color:#666;margin-bottom:20px;">DELETE /api/users/{id}</p>
+                    <div class="form-group">
+                        <label>User ID</label>
+                        <input type="number" id="deleteUserId" placeholder="User ID to delete">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testDeleteUser()">Send Request</button>
+                    </div>
+                    <div class="response-section" id="userDelete-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="userDelete-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="userDelete-body"></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="fileUpload-section" class="api-test-section">
+                    <h2 class="section-title">Upload File</h2>
+                    <p style="color:#666;margin-bottom:20px;">POST /api/files/upload</p>
+                    <div class="form-group">
+                        <label>Module</label>
+                        <input type="text" id="uploadModule" placeholder="Module name (optional)">
+                    </div>
+                    <div class="form-group">
+                        <label>File</label>
+                        <div class="file-upload-area" id="dropZone">
+                            <div class="file-upload-icon">📁</div>
+                            <p>Click or drag file here to upload</p>
+                            <input type="file" id="uploadFile" multiple>
+                        </div>
+                    </div>
+                    <div class="file-list" id="fileList"></div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testUploadFile()">Upload File</button>
+                    </div>
+                    <div class="response-section" id="fileUpload-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="fileUpload-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="fileUpload-body"></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="filePage-section" class="api-test-section">
+                    <h2 class="section-title">File Page Query</h2>
+                    <p style="color:#666;margin-bottom:20px;">GET /api/files/page</p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Current Page</label>
+                            <input type="number" id="filePageCurrent" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Page Size</label>
+                            <input type="number" id="filePageSize" value="10">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>File Name</label>
+                            <input type="text" id="filePageName" placeholder="File name">
+                        </div>
+                        <div class="form-group">
+                            <label>File Type</label>
+                            <input type="text" id="filePageType" placeholder="e.g. jpg, png">
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testFilePage()">Send Request</button>
+                    </div>
+                    <div class="response-section" id="filePage-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="filePage-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="filePage-body"></pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="fileDownload-section" class="api-test-section">
+                    <h2 class="section-title">Download File</h2>
+                    <p style="color:#666;margin-bottom:20px;">GET /api/files/download/{id}</p>
+                    <div class="form-group">
+                        <label>File ID</label>
+                        <input type="number" id="downloadFileId" placeholder="File ID">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="testDownloadFile()">Download File</button>
+                    </div>
+                    <div class="response-section" id="fileDownload-response" style="display:none;">
+                        <div class="response-header">
+                            <span class="response-title">Response</span>
+                            <span class="response-status" id="fileDownload-status"></span>
+                        </div>
+                        <div class="response-body">
+                            <pre id="fileDownload-body"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('authToken') || '';
+        let refreshTokenValue = localStorage.getItem('refreshToken') || '';
+        
+        if (authToken) {
+            document.getElementById('tokenDisplay').style.display = 'block';
+            document.getElementById('tokenValue').textContent = authToken.substring(0, 50) + '...';
+            document.getElementById('refreshToken').value = refreshTokenValue;
+        }
+        
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        function showSection(section) {
+            document.querySelectorAll('.api-test-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.api-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(section + '-section').classList.add('active');
+            event.target.closest('.api-item').classList.add('active');
+        }
+        
+        function getHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            if (authToken) {
+                headers['Authorization'] = 'Bearer ' + authToken;
+            }
+            return headers;
+        }
+        
+        function displayResponse(prefix, response, status) {
+            document.getElementById(prefix + '-response').style.display = 'block';
+            document.getElementById(prefix + '-status').textContent = status;
+            document.getElementById(prefix + '-status').className = 'response-status ' + 
+                (status >= 200 && status < 300 ? 'status-success' : 'status-error');
+            document.getElementById(prefix + '-body').textContent = JSON.stringify(response, null, 2);
+        }
+        
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.code === 200) {
+                    authToken = data.data.accessToken;
+                    refreshTokenValue = data.data.refreshToken;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('refreshToken', refreshTokenValue);
+                    
+                    document.getElementById('tokenDisplay').style.display = 'block';
+                    document.getElementById('tokenValue').textContent = authToken.substring(0, 50) + '...';
+                    document.getElementById('refreshToken').value = refreshTokenValue;
+                    
+                    showToast('Login successful!', 'success');
+                } else {
+                    showToast('Login failed: ' + (data.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showToast('Login failed: ' + error.message, 'error');
+            }
+        }
+        
+        async function testLogin() {
+            const username = document.getElementById('api-login-username').value;
+            const password = document.getElementById('api-login-password').value;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                
+                const data = await response.json();
+                displayResponse('login', data, response.status);
+                
+                if (response.ok && data.code === 200) {
+                    authToken = data.data.accessToken;
+                    refreshTokenValue = data.data.refreshToken;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('refreshToken', refreshTokenValue);
+                    document.getElementById('tokenDisplay').style.display = 'block';
+                    document.getElementById('tokenValue').textContent = authToken.substring(0, 50) + '...';
+                    document.getElementById('refreshToken').value = refreshTokenValue;
+                }
+            } catch (error) {
+                displayResponse('login', {error: error.message}, 0);
+            }
+        }
+        
+        async function testRefresh() {
+            const token = document.getElementById('refreshToken').value;
+            
+            try {
+                const response = await fetch('/api/auth/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Refresh-Token': token
+                    }
+                });
+                
+                const data = await response.json();
+                displayResponse('refresh', data, response.status);
+            } catch (error) {
+                displayResponse('refresh', {error: error.message}, 0);
+            }
+        }
+        
+        async function testUserInfo() {
+            try {
+                const response = await fetch('/api/users/info', {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                
+                const data = await response.json();
+                displayResponse('userInfo', data, response.status);
+            } catch (error) {
+                displayResponse('userInfo', {error: error.message}, 0);
+            }
+        }
+        
+        async function testUserPage() {
+            const params = new URLSearchParams({
+                current: document.getElementById('pageCurrent').value,
+                size: document.getElementById('pageSize').value
+            });
+            
+            const keyword = document.getElementById('pageKeyword').value;
+            if (keyword) params.append('keyword', keyword);
+            
+            try {
+                const response = await fetch('/api/users/page?' + params, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                
+                const data = await response.json();
+                displayResponse('userPage', data, response.status);
+            } catch (error) {
+                displayResponse('userPage', {error: error.message}, 0);
+            }
+        }
+        
+        async function testAddUser() {
+            const body = {
+                username: document.getElementById('addUsername').value,
+                password: document.getElementById('addPassword').value,
+                nickname: document.getElementById('addNickname').value,
+                email: document.getElementById('addEmail').value,
+                phone: document.getElementById('addPhone').value,
+                status: parseInt(document.getElementById('addStatus').value)
+            };
+            
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                displayResponse('userAdd', data, response.status);
+            } catch (error) {
+                displayResponse('userAdd', {error: error.message}, 0);
+            }
+        }
+        
+        async function testUpdateUser() {
+            const body = {
+                id: parseInt(document.getElementById('updateUserId').value),
+                nickname: document.getElementById('updateNickname').value,
+                email: document.getElementById('updateEmail').value,
+                phone: document.getElementById('updatePhone').value,
+                status: parseInt(document.getElementById('updateStatus').value)
+            };
+            
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify(body)
+                });
+                
+                const data = await response.json();
+                displayResponse('userUpdate', data, response.status);
+            } catch (error) {
+                displayResponse('userUpdate', {error: error.message}, 0);
+            }
+        }
+        
+        async function testDeleteUser() {
+            const userId = document.getElementById('deleteUserId').value;
+            
+            try {
+                const response = await fetch('/api/users/' + userId, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                
+                const data = await response.json();
+                displayResponse('userDelete', data, response.status);
+            } catch (error) {
+                displayResponse('userDelete', {error: error.message}, 0);
+            }
+        }
+        
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('uploadFile');
+        let selectedFiles = [];
+        
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            selectedFiles = Array.from(e.dataTransfer.files);
+            updateFileList();
+        });
+        fileInput.addEventListener('change', (e) => {
+            selectedFiles = Array.from(e.target.files);
+            updateFileList();
+        });
+        
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = selectedFiles.map((file, index) => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <span>📄</span>
+                        <span>${file.name}</span>
+                        <span style="color:#666;font-size:12px;">(${(file.size/1024).toFixed(2)} KB)</span>
+                    </div>
+                    <span class="file-remove" onclick="removeFile(${index})">✕</span>
+                </div>
+            `).join('');
+        }
+        
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+        
+        async function testUploadFile() {
+            if (selectedFiles.length === 0) {
+                showToast('Please select a file first', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', selectedFiles[0]);
+            
+            const module = document.getElementById('uploadModule').value;
+            if (module) formData.append('module', module);
+            
+            try {
+                const headers = {};
+                if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+                
+                const response = await fetch('/api/files/upload', {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+                
+                const data = await response.json();
+                displayResponse('fileUpload', data, response.status);
+                
+                if (response.ok) {
+                    selectedFiles = [];
+                    updateFileList();
+                }
+            } catch (error) {
+                displayResponse('fileUpload', {error: error.message}, 0);
+            }
+        }
+        
+        async function testFilePage() {
+            const params = new URLSearchParams({
+                current: document.getElementById('filePageCurrent').value,
+                size: document.getElementById('filePageSize').value
+            });
+            
+            const name = document.getElementById('filePageName').value;
+            if (name) params.append('fileName', name);
+            
+            const type = document.getElementById('filePageType').value;
+            if (type) params.append('fileType', type);
+            
+            try {
+                const response = await fetch('/api/files/page?' + params, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                
+                const data = await response.json();
+                displayResponse('filePage', data, response.status);
+            } catch (error) {
+                displayResponse('filePage', {error: error.message}, 0);
+            }
+        }
+        
+        function testDownloadFile() {
+            const fileId = document.getElementById('downloadFileId').value;
+            if (!fileId) {
+                showToast('Please enter file ID', 'error');
+                return;
+            }
+            
+            window.open('/api/files/download/' + fileId, '_blank');
+            displayResponse('fileDownload', {message: 'Download started in new window'}, 200);
+        }
+    </script>
+</body>
+</html>
