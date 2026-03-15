@@ -25,6 +25,8 @@ public class StartupPrinter implements ApplicationRunner {
     private static final String BOLD = "\u001B[1m";
     private static final String BLUE = "\u001B[34m";
 
+    private static final int BOX_WIDTH = 64;
+
     @Autowired
     private Environment environment;
 
@@ -54,39 +56,51 @@ public class StartupPrinter implements ApplicationRunner {
 
         StringBuilder banner = new StringBuilder();
         banner.append("\n");
-        banner.append(CYAN).append("╔══════════════════════════════════════════════════════════════╗").append(RESET).append("\n");
-        banner.append(CYAN).append("║").append(RESET).append(BOLD).append("                    项目启动信息                              ").append(RESET).append(CYAN).append("║").append(RESET).append("\n");
-        banner.append(CYAN).append("╠══════════════════════════════════════════════════════════════╣").append(RESET).append("\n");
-        banner.append(formatLine("项目名称", applicationName));
-        banner.append(formatLine("版本号", version));
-        banner.append(formatLine("环境配置", formatEnv(env)));
-        banner.append(formatLine("服务端口", GREEN + port + RESET));
-        banner.append(formatLine("启动时间", startupTime));
-        banner.append(CYAN).append("╠══════════════════════════════════════════════════════════════╣").append(RESET).append("\n");
-        banner.append(formatLine("数据库类型", dbType));
-        banner.append(formatLine("数据库地址", dbAddress));
-        banner.append(formatDbStatusLine(dbConnected));
-        banner.append(CYAN).append("╚══════════════════════════════════════════════════════════════╝").append(RESET).append("\n");
+        banner.append(CYAN).append(repeat("_", BOX_WIDTH)).append(RESET).append("\n");
+        banner.append(formatTitle("项目启动信息")).append("\n");
+        banner.append(CYAN).append(repeat("_", BOX_WIDTH)).append(RESET).append("\n");
+        banner.append(formatLine("项目名称", applicationName)).append("\n");
+        banner.append(formatLine("版本号", version)).append("\n");
+        banner.append(formatLine("环境配置", formatEnv(env))).append("\n");
+        banner.append(formatLine("服务端口", GREEN + port + RESET)).append("\n");
+        banner.append(formatLine("启动时间", startupTime)).append("\n");
+        banner.append(CYAN).append(repeat("_", BOX_WIDTH)).append(RESET).append("\n");
+        banner.append(formatLine("数据库类型", dbType)).append("\n");
+        banner.append(formatLine("数据库地址", dbAddress)).append("\n");
+        banner.append(formatDbStatusLine(dbConnected)).append("\n");
+        banner.append(CYAN).append(repeat("_", BOX_WIDTH)).append(RESET).append("\n");
 
         log.info(banner.toString());
     }
 
+    private String formatTitle(String title) {
+        int titleWidth = getDisplayWidth(title);
+        int totalPadding = BOX_WIDTH - titleWidth;
+        int leftPadding = totalPadding / 2;
+        int rightPadding = totalPadding - leftPadding;
+        return BOLD + repeat(" ", leftPadding) + title + repeat(" ", rightPadding) + RESET;
+    }
+
     private String formatLine(String label, String value) {
-        return CYAN + "║" + RESET + String.format("  %-12s: %s", label, value) + getPadding(label, value) + CYAN + "║" + RESET + "\n";
+        String strippedValue = stripAnsiCodes(value);
+        int labelWidth = getDisplayWidth(label);
+        int valueWidth = getDisplayWidth(strippedValue);
+        int contentWidth = 2 + labelWidth + 2 + valueWidth;
+        int rightPadding = BOX_WIDTH - contentWidth;
+        
+        return "  " + label + ": " + value + repeat(" ", Math.max(0, rightPadding));
     }
 
     private String formatDbStatusLine(boolean connected) {
-        String status = connected ? GREEN + "已连接" + RESET : RED + "未连接" + RESET;
-        String line = String.format("  %-12s: %s", "数据库状态", status);
-        int visibleLen = 12 + 2 + (connected ? 4 : 4);
-        int padding = 62 - visibleLen - 15;
-        return CYAN + "║" + RESET + line + " ".repeat(Math.max(0, padding)) + CYAN + "║" + RESET + "\n";
-    }
-
-    private String getPadding(String label, String value) {
-        int visibleLen = 12 + 2 + value.replaceAll("\u001B\\[[;\\d]*m", "").length();
-        int padding = 62 - visibleLen;
-        return " ".repeat(Math.max(0, padding));
+        String statusText = connected ? "已连接" : "未连接";
+        String status = connected ? GREEN + statusText + RESET : RED + statusText + RESET;
+        
+        int labelWidth = getDisplayWidth("数据库状态");
+        int valueWidth = getDisplayWidth(statusText);
+        int contentWidth = 2 + labelWidth + 2 + valueWidth;
+        int rightPadding = BOX_WIDTH - contentWidth;
+        
+        return "  " + "数据库状态" + ": " + status + repeat(" ", Math.max(0, rightPadding));
     }
 
     private String formatEnv(String env) {
@@ -98,6 +112,39 @@ public class StartupPrinter implements ApplicationRunner {
             return BLUE + env + RESET;
         }
         return GREEN + env + RESET;
+    }
+
+    private int getDisplayWidth(String str) {
+        if (str == null) {
+            return 0;
+        }
+        int width = 0;
+        for (char c : str.toCharArray()) {
+            if (Character.toString(c).matches("[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]")) {
+                width += 2;
+            } else {
+                width += 1;
+            }
+        }
+        return width;
+    }
+
+    private String stripAnsiCodes(String str) {
+        if (str == null) {
+            return "";
+        }
+        return str.replaceAll("\u001B\\[[;\\d]*m", "");
+    }
+
+    private String repeat(String str, int count) {
+        if (count <= 0) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            sb.append(str);
+        }
+        return sb.toString();
     }
 
     private String extractDbType(String url) {

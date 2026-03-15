@@ -7,9 +7,6 @@ spring:
   application:
     name: back
 
-project:
-  version: @project.version@
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/template_db?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
@@ -55,6 +52,9 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+
+project:
+  version: @project.version@
 
 jwt:
   secret: defaultSecretKeyForTemplateProject2024PleaseReplaceWithYourOwnSecretKey
