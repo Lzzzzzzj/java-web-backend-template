@@ -108,7 +108,7 @@ CREATE TABLE `sys_file` (
 -- 初始化数据
 -- 插入默认管理员用户（密码为：123456，使用BCrypt加密）
 INSERT INTO `sys_user` (`username`, `password`, `nickname`, `email`, `phone`, `status`) VALUES
-('admin', '$10$k6o0X36xkZfJvQwJXPvZsuZHHHRhDguscEN61ykKbRk5egEyt3pFy', '系统管理员', 'admin@example.com', '13800138000', 1);
+('admin', '$s;10$k6o0X36xkZfJvQwJXPvZsuZHHHRhDguscEN61ykKbRk5egEyt3pFy', '系统管理员', 'admin@example.com', '13800138000', 1);
 
 -- 插入默认角色
 INSERT INTO `sys_role` (`role_name`, `role_code`, `description`, `status`, `sort`) VALUES
